@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+      $( document ).ready(() => {
+        $( '#fire' ).click(() => {
+          $( 'body' ).append(`<div class='bullet'></div>`);
+          
+          const degrees = parseFloat($( '#angle' ).val());
+          const velocity = parseFloat($( '#velocity' ).val());
+          const gravity = 9.8; /** Pixels per second squared */
+          
+          /** Convert degrees to radians */
+          const radians = degrees * Math.PI / 180;
+          
+          /** Get the x and y components of the velocity, based on the angle */
+          const velocity_x = Math.cos(radians) * velocity;
+          const velocity_y = Math.sin(radians) * velocity;
+          
+          const position_x = time => 200 + velocity_x * time;
+          const position_y = time => 500 - velocity_y * time + 0.5 * gravity * Math.pow(time, 2);
+          
+          let time = 0;
+          
+          setTimeout(updateBulletPosition, 10);
+          
+          function updateBulletPosition() {
+            time += 0.02;
+            
+            console.log(`Moving bullet to (${position_x(time)}px,${position_y(time)}px)`);
+            
+            $( '.bullet' ).css('left', position_x(time) + 'px');
+            $( '.bullet' ).css('top', position_y(time) + 'px');
+          
+            if ( time < 20 )
+              setTimeout(updateBulletPosition, 10);
+          }
+        });
+      });
+    </script>
+    <style>
+      .bullet { width: 10px; height: 10px; position: absolute; top: 500px; left: 200px; background-color: yellowgreen; }
+      .tank { width: 50px; height: 30px; position: absolute; top: 500px; left: 150px; background-color: blue; }
+      .target { width: 50px; height: 30px; position: absolute; top: 300px; left: 1000px; background-color: darkred; }
+      .parameters { position: absolute; top: 550px; left: 450px; }
+      #angle { width: 30px; text-align: center; }
+      #velocity { width: 50px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div class='tank'></div>
+    <div class='target'></div>
+    <div class='parameters'>
+      <b>Angle:</b> <input type='text' id='angle' value=45> degrees
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <b>Velocity:</b> <input type='text' id='velocity' value=50> pixels/s
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <button type='button' id='fire'>Fire</button>
+    </div>
+  </body>
+</html>
