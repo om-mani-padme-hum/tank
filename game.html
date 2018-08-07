@@ -1,14 +1,50 @@
 <html>
   <head>
+    <!--- Include jQuery because it's very handy for manipulating HTML, it's what all $( ) references are using --->
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script>
       $( document ).ready(() => {
-        $( '#fire' ).click(() => {
-          $( 'body' ).append(`<div class='bullet'></div>`);
-          
+        /** Define gravity */
+        const gravity = 9.8;
+        
+        /** 
+         * Define equations for acceleration, velocity, and position, neglecting air resistance:
+         * a_x = 0 pixels/s^2 (m/s^2)
+         * a_y = -9.8 pixels/s^2 (m/s^2) a.k.a Gravity
+         * v_x = integral ( a_x * dt ) = a_x * t + v_x_start = v_x_start
+         * v_y = integral ( a_y * dt ) = a_y * t + v_y_start = -9.8 * t + v_y_start
+         * p_x = integral ( v_x * dt ) = v_x_start * t + p_x_start
+         * p_y = integral ( v_y * dt ) = 0.5 * -9.5 * t^2 + v_y_start * t + p_y_start
+         */
+        const position_x = (velocity_x, time) => 200 + velocity_x * time;
+        const position_y = (velocity_y, time) => 500 - velocity_y * time + 0.5 * gravity * Math.pow(time, 2);
+        
+        /** Capture target size and position */
+        const target_width = parseInt($( '.target' ).css('width'));
+        const target_height = parseInt($( '.target' ).css('height'));
+        const target_left = parseInt($( '.target' ).css('left'));
+        const target_top = parseInt($( '.target' ).css('top'));
+
+        /** Capture 'ground' size and position */
+        const ground_width = parseInt($( '.ground' ).css('width'));
+        const ground_height = parseInt($( '.ground' ).css('height'));
+        const ground_left = parseInt($( '.ground' ).css('left'));
+        const ground_top = parseInt($( '.ground' ).css('top'));
+
+        /** Capture 'hill' size and position */
+        const hill_width = parseInt($( '.hill' ).css('width'));
+        const hill_height = parseInt($( '.hill' ).css('height'));
+        const hill_left = parseInt($( '.hill' ).css('left'));
+        const hill_top = parseInt($( '.hill' ).css('top'));
+
+        /** Update bullet positions every 10 ms */
+        setInterval(updateBulletPositions, 10);
+
+        /** When the fire button is clicked... */
+        $( '#fire' ).click(() => {          
+          /** Capture current angle and velocity from UI inputs */
           const degrees = parseFloat($( '#angle' ).val());
           const velocity = parseFloat($( '#velocity' ).val());
-          const gravity = 9.8; /** Pixels per second squared */
           
           /** Convert degrees to radians */
           const radians = degrees * Math.PI / 180;
@@ -17,38 +53,117 @@
           const velocity_x = Math.cos(radians) * velocity;
           const velocity_y = Math.sin(radians) * velocity;
           
-          const position_x = time => 200 + velocity_x * time;
-          const position_y = time => 500 - velocity_y * time + 0.5 * gravity * Math.pow(time, 2);
-          
-          let time = 0;
-          
-          setTimeout(updateBulletPosition, 10);
-          
-          function updateBulletPosition() {
-            time += 0.02;
-            
-            console.log(`Moving bullet to (${position_x(time)}px,${position_y(time)}px)`);
-            
-            $( '.bullet' ).css('left', position_x(time) + 'px');
-            $( '.bullet' ).css('top', position_y(time) + 'px');
-          
-            if ( time < 20 )
-              setTimeout(updateBulletPosition, 10);
-          }
+          /** Append new bullet to body with time=0 and appropriate velocity components */
+          $( 'body' ).append(`<div class='bullet' data-time=0 data-velocity-x=${velocity_x} data-velocity-y=${velocity_y}></div>`);
         });
+        
+        /** Function for updating bullet positions and capturing explosions/fails */
+        function updateBulletPositions() {
+          /** Loop through each element with class 'bullet'... */
+          $( '.bullet' ).each((index, bullet) => {
+            /** Get bullet data-time and add 0.02 to it */
+            const time = $( bullet ).data('time') + 0.02;
+            
+            /** Update bullet data-time with new time */
+            $( bullet ).data('time', time);
+            
+            /** Grab velocity-x and velocity-y from bullet data */
+            const velocity_x = $( bullet ).data('velocity-x');
+            const velocity_y = $( bullet ).data('velocity-y');
+
+            /** Calculate new position_x and position_y based on this bullet's velocity components and new time */
+            const new_x = position_x(velocity_x, time);
+            const new_y = position_y(velocity_y, time);
+            
+            /** Debug to console */
+            console.log(`Moving bullet to (${new_x}px,${new_y}px)`);
+
+            /** Move the bullet to the new position */
+            $( bullet ).css('left', new_x);
+            $( bullet ).css('top', new_y);
+
+            /** Define a couple flags to track whether to destroy bullet and whether it hit target */
+            let destroy = false;
+            let hit_target = false;
+
+            /** See if it hit target, if so destroy bullet and go boom */
+            if ( new_x >= target_left && new_x <= target_left + target_width && new_y >= target_top && new_y <= target_top + target_height ) {
+              destroy = true;
+              hit_target = true;
+            } 
+            
+            /** Else if it hit the ground, if so destroy bullet */
+            else if ( new_x >= ground_left && new_x <= ground_left + ground_width && new_y >= ground_top && new_y <= ground_top + ground_height ) {
+              destroy = true;
+            } 
+            
+            /** Else if it hit the hill, if so destroy bullet */
+            else if ( new_x >= hill_left && new_x <= hill_left + hill_width && new_y >= hill_top && new_y <= hill_top + hill_height ) {
+              destroy = true;
+            } 
+            
+            /** Else if it is off screen to the left, right, or bottom, and if so destroy bullet */
+            else if ( new_x >= $( window ).width() || new_x < 0 || new_y >= $( window ).height() ) {
+              destroy = true;
+            }
+
+            /** If destroy bullet and go boom... */
+            if ( destroy && hit_target ) {
+              /** Destroy bullet */
+              $( bullet ).remove();
+              
+              /** Go boom */
+              $( '.boom' ).css('top', target_top + target_height / 2 - 50);
+              $( '.boom' ).css('left', target_left + target_width / 2 - 50);
+              $( '.boom' ).show();
+
+              /** Make boom fade after 600 ms */
+              setTimeout(() => { $( '.boom' ).hide() }, 600);
+            } 
+            
+            /** Else if destroy bullet */
+            else if ( destroy ) {
+              /** Destroy bullet */
+              $( bullet ).remove();
+            }
+          });
+        }
       });
     </script>
     <style>
-      .bullet { width: 10px; height: 10px; position: absolute; top: 500px; left: 200px; background-color: yellowgreen; }
+      /** For a yellow circle BOOM when target tank is destroyed, starts with display: none to hide it */
+      .boom { width: 100px; height: 100px; position: absolute; display: none; background-color: yellow; border-radius: 100px; z-index: 10; }
+      
+      /** This is the horizontal ground only that's below your tank and goes all the way across the screen */
+      .ground { width: 100%; height: 300px; position: absolute; top: 530px; left: 0px; background-color: forestgreen; }
+      
+      /** This is the hill on the right side below the enemy tank and is only 500 pixels wide */
+      .hill { width: 500px; height: 200px; position: absolute; top: 330px; left: 800px; background-color: forestgreen; }
+      
+      /** These are the 10x10 pixel gray circle bullets that will have their top and left continuously changed */
+      .bullet { width: 10px; height: 10px; position: absolute; top: 500px; left: 200px; background-color: darkslategray; border-radius: 5px; }
+      
+      /** This is your tank */
       .tank { width: 50px; height: 30px; position: absolute; top: 500px; left: 150px; background-color: blue; }
+      
+      /** This is the target tank */
       .target { width: 50px; height: 30px; position: absolute; top: 300px; left: 1000px; background-color: darkred; }
+      
+      /** This is to align the box with the angle/velocity inputs and fire button */
       .parameters { position: absolute; top: 550px; left: 450px; }
+      
+      /** This is for the angle input */
       #angle { width: 30px; text-align: center; }
+      
+      /** This is for the velocity input */
       #velocity { width: 50px; text-align: center; }
     </style>
   </head>
   <body>
+    <div class='boom'></div>
     <div class='tank'></div>
+    <div class='ground'></div>
+    <div class='hill'></div>
     <div class='target'></div>
     <div class='parameters'>
       <b>Angle:</b> <input type='text' id='angle' value=45> degrees
