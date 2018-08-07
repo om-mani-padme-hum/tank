@@ -3,6 +3,7 @@
     <!--- Include jQuery because it's very handy for manipulating HTML, it's what all $( ) references are using --->
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script>
+      /** When the browser has all the elements loaded... */
       $( document ).ready(() => {
         /** Define gravity */
         const gravity = 9.8;
@@ -131,6 +132,8 @@
       });
     </script>
     <style>
+      /** Define styles for HTML elements */
+      
       /** For a yellow circle BOOM when target tank is destroyed, starts with display: none to hide it */
       .boom { width: 100px; height: 100px; position: absolute; display: none; background-color: yellow; border-radius: 100px; z-index: 10; }
       
@@ -160,6 +163,7 @@
     </style>
   </head>
   <body>
+    <!--- Define HTML elements --->
     <div class='boom'></div>
     <div class='tank'></div>
     <div class='ground'></div>
