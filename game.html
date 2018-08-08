@@ -5,8 +5,8 @@
     <script>
       /** When the browser has all the elements loaded... */
       $( document ).ready(() => {
-        /** Define gravity */
-        const gravity = 9.8;
+        /** Define gravity as -9.8 pixels/second^2 (should be meters/second^2 in real life) */
+        const gravity = -9.8;
         
         /** 
          * Define equations for acceleration, velocity, and position, neglecting air resistance:
@@ -18,7 +18,7 @@
          * p_y = integral ( v_y * dt ) = 0.5 * -9.8 * t^2 + v_y_start * t + p_y_start
          */
         const position_x = (velocity_x, time) => 200 + velocity_x * time;
-        const position_y = (velocity_y, time) => 500 - velocity_y * time + 0.5 * gravity * Math.pow(time, 2);
+        const position_y = (velocity_y, time) => 500 - velocity_y * time - 0.5 * gravity * Math.pow(time, 2);
         
         /** Capture target size and position */
         const target_width = parseInt($( '.target' ).css('width'));
