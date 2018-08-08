@@ -15,7 +15,7 @@
          * v_x = integral ( a_x * dt ) = a_x * t + v_x_start = v_x_start
          * v_y = integral ( a_y * dt ) = a_y * t + v_y_start = -9.8 * t + v_y_start
          * p_x = integral ( v_x * dt ) = v_x_start * t + p_x_start
-         * p_y = integral ( v_y * dt ) = 0.5 * -9.5 * t^2 + v_y_start * t + p_y_start
+         * p_y = integral ( v_y * dt ) = 0.5 * -9.8 * t^2 + v_y_start * t + p_y_start
          */
         const position_x = (velocity_x, time) => 200 + velocity_x * time;
         const position_y = (velocity_y, time) => 500 - velocity_y * time + 0.5 * gravity * Math.pow(time, 2);
